@@ -31,5 +31,9 @@ fun Nav(){
         composable(route = "NewGroup"){
             ScreenGroup(navController)
         }
+        composable(route = "EditProfile"){
+            ScreenEditProfile(navController)
+        }
     }
 }
+
