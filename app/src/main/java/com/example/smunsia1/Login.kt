@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
@@ -44,8 +43,9 @@ import androidx.navigation.NavHostController
 @Composable
 
 fun ScreenLogin(navController: NavHostController) {
-    var email by remember { mutableStateOf(TextFieldValue("email")) }
-    var password by remember { mutableStateOf(TextFieldValue("password")) }
+    var email by remember { mutableStateOf(TextFieldValue("army@gmail.com")) }
+    var password by remember { mutableStateOf(TextFieldValue("*****")) }
+
 
     Column(modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
