@@ -4,13 +4,13 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -149,8 +149,6 @@ fun ScreenPosting(navController: NavController) {
 
             // Kolom 3: Menu 3 titik
             ThreeDotMenu()
-
-
         }
 
         // Row ketiga
@@ -163,19 +161,20 @@ fun ScreenPosting(navController: NavController) {
         }
 
         // Row keempat (menggunakan Box untuk Image)
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp)
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.post1),
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(16f / 9f) // adjust the aspect ratio as needed
-                    .height(100.dp) // adjust the height as needed
-            )
+            Column {
+                Image(
+                    painter = painterResource(id = R.drawable.post1),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(14f / 9f)
+                )
+            }
         }
 
         // Row kelima
@@ -243,21 +242,21 @@ fun ScreenPosting(navController: NavController) {
             Text(text = "Semangat", fontSize = 16.sp)
         }
 
-        Row(
+        // Row keempat (menggunakan Box untuk Image)
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(vertical = 120.dp)
         ) {
             Image(
                 painter = painterResource(id = R.drawable.post2),
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(16f / 9f) // adjust the aspect ratio as needed
-                    .height(100.dp) // adjust the height as needed
+                    .aspectRatio(14f / 9f)
             )
         }
+
         // Row kedelepan
         Row(
             modifier = Modifier
