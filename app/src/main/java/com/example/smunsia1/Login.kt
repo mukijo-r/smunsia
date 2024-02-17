@@ -20,8 +20,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,12 +43,21 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.smunsia1.ui.AuthViewModel
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ScreenLogin(navController: NavHostController) {
-    var email by remember { mutableStateOf(TextFieldValue("mukijo@gmail.com")) }
-    var password by remember { mutableStateOf(TextFieldValue("*****")) }
+fun ScreenLogin(navController: NavHostController, authViewModel: AuthViewModel) {
+    var email by remember { mutableStateOf(TextFieldValue("")) }
+    var password by remember { mutableStateOf(TextFieldValue("")) }
+    var showMessage by remember { mutableStateOf(false) }
+    var message by remember { mutableStateOf("") }
 
     // Check if the screen is in landscape mode
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -141,9 +153,70 @@ fun ScreenLogin(navController: NavHostController) {
             )
             Spacer(modifier = Modifier.height(15.dp))
             Button(onClick = {
-                navController.navigate("Posting")
+                // Validasi data pengguna sebelum menyimpan ke database
+                if (email.text.isNotEmpty() && password.text.isNotEmpty()) {
+                    // Menggunakan Firebase Authentication untuk otentikasi
+                    FirebaseAuth.getInstance().signInWithEmailAndPassword(
+                        email.text, password.text
+                    ).addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            val user = task.result?.user
+                            val userUid = user?.uid
+
+                            // Ambil data dari Realtime Database
+                            if (userUid != null) {
+                                val databaseReference = FirebaseDatabase.getInstance().getReference("users")
+                                databaseReference.child(userUid).addListenerForSingleValueEvent(object :
+                                    ValueEventListener {
+                                    override fun onDataChange(dataSnapshot: DataSnapshot) {
+                                        // Ambil data username dari snapshot
+                                        val username = dataSnapshot.child("username").getValue(String::class.java)
+                                        // Gunakan data username sesuai kebutuhan
+
+                                        // Set username ke ViewModel atau tempat penyimpanan data yang sesuai
+                                        authViewModel.setLoggedInUser(username ?: "")
+                                    }
+
+                                    override fun onCancelled(databaseError: DatabaseError) {
+                                        // Handle pembatalan
+                                    }
+                                })
+                            }
+
+                            // Lanjutkan navigasi atau tindakan berikutnya setelah autentikasi sukses
+                            navController.navigate("Posting")
+                        } else {
+                            // Jika otentikasi gagal, tampilkan pesan kesalahan
+                            showMessage = true
+                            message = "Email atau password salah"
+                        }
+                    }
+                } else {
+                    // Menampilkan pesan kesalahan jika data tidak lengkap
+                    showMessage = true
+                    message = "Harap isi semua kolom dengan benar"
+                }
             }) {
                 Text(text = "Login", fontSize = 20.sp)
+            }
+        }
+
+        if (showMessage) {
+            LaunchedEffect(showMessage) {
+                delay(2000L) // Menunda selama 2 detik
+                showMessage = false
+            }
+
+            Snackbar(
+                modifier = Modifier.padding(8.dp),
+                action = {
+                    // Tombol untuk menutup Snackbar (opsional)
+                    TextButton(onClick = { showMessage = false }) {
+                        Text("Tutup")
+                    }
+                }
+            ) {
+                Text(message)
             }
         }
 
@@ -171,6 +244,15 @@ fun ScreenLogin(navController: NavHostController) {
                 modifier = Modifier.padding(vertical = 8.dp)
             )
         }
+
+        Spacer(modifier = Modifier.height(15.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Text(text = "Powered by", fontSize = 20.sp, modifier = Modifier.padding(end = 8.dp))
+            Logo2()
+        }
     }
 }
 
@@ -189,6 +271,18 @@ fun Logo1() {
 }
 
 @Composable
+fun Logo2() {
+    val logoModifier = Modifier
+        .size(100.dp)
+
+    Image(
+        painter = painterResource(id = R.drawable.unsia),
+        contentDescription = null,
+        modifier = logoModifier
+    )
+}
+
+@Composable
 fun HeaderText(text: String) {
     Text(
         text = text,
@@ -196,6 +290,8 @@ fun HeaderText(text: String) {
         fontWeight = FontWeight.Bold
     )
 }
+
+
 
 
 

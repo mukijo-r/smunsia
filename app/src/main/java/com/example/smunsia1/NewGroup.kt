@@ -45,13 +45,14 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
+import androidx.navigation.NavController
+import com.example.smunsia1.ui.AuthViewModel
 
 data class Contact(val id: Int, val name: String, val avatar: Painter)
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
-fun ScreenGroup(navController: NavHostController) {
+fun ScreenGroup(navController: NavController, authViewModel: AuthViewModel, username: String) {
     var descriptionText by remember { mutableStateOf("Nama Group") }
     Scaffold(
         topBar = {
@@ -353,4 +354,3 @@ fun Centang() {
         modifier = Modifier.size(24.dp)
     )
 }
-

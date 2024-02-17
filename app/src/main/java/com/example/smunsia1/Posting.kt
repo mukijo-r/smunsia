@@ -1,5 +1,6 @@
 package com.example.smunsia1
 
+import android.icu.text.SimpleDateFormat
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,26 +16,28 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.Divider
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -52,50 +55,55 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.smunsia1.ui.AuthViewModel
+import com.example.smunsia1.ui.PostinganViewModel
+import com.google.firebase.database.ktx.database
+import com.google.firebase.ktx.Firebase
+import kotlin.random.Random
+import androidx.compose.material3.Text as Text1
 
 
-data class MenuOption(val text: String, val icon: ImageVector, val onClick: (NavController) -> Unit)
+data class MenuOption(val text: String, val icon: ImageVector, val onClick: (NavController, String) -> Unit)
+val database = Firebase.database
+val postinganRef = database.getReference("postingan")
 
 val menuOptions = listOf(
-    MenuOption("New Post", Icons.Filled.Add) { navController -> navController.navigate("NewPost") },
-    MenuOption("New Group", Icons.Filled.Person) { navController -> navController.navigate("NewGroup") },
-    MenuOption("Profil", Icons.Filled.Settings) { navController -> navController.navigate("EditProfile") },
+    MenuOption("New Post", Icons.Filled.Add) { navController, username -> navController.navigate("NewPost/$username") },
+    MenuOption("New Group", Icons.Filled.Person) { navController, username -> navController.navigate("NewGroup/$username") },
+    MenuOption("Profil", Icons.Filled.Settings) { navController, username -> navController.navigate("EditProfile/$username") },
+    MenuOption("Logout", Icons.Filled.Home) { navController, username -> navController.navigate("Login") },
 )
 
 @Composable
-fun ScreenPosting(navController: NavController) {
-    val annotatedString = buildAnnotatedString {
-        withStyle(style = SpanStyle(
-            color = LocalContentColor.current,
-            fontWeight = FontWeight.Bold,
-            fontSize = 18.sp
-        )) {
-            append("Irmayanti Juliana")
-        }
-    }
+fun ScreenPosting(
+    navController: NavController,
+    authViewModel: AuthViewModel,
+    postinganViewModel: PostinganViewModel = viewModel()
+) {
+    val postingans = postinganViewModel.postingans.value ?: emptyList()
 
     var isMenuExpanded = false
-    FloatingMenu(navController = navController) { isMenuExpanded = true }
+
+    FloatingMenu(
+        navController = navController,
+        authViewModel = authViewModel
+    ) { isMenuExpanded = true }
 
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 10.dp)
+            .fillMaxSize()
+            .padding(16.dp)
     ) {
-        // Row pertama
+        // Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .weight(1f)
         ) {
-            // Kolom 1
-
             Spacer(modifier = Modifier.width(8.dp))
-
-            // Kolom 2
-            Text(
+            Text1(
                 text = "Postingan terbaru",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
@@ -105,226 +113,130 @@ fun ScreenPosting(navController: NavController) {
                     .padding(top = 8.dp)
             )
         }
+        Spacer(modifier = Modifier.width(8.dp))
 
         Divider(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 18.dp, bottom = 8.dp),
+                .padding(top = 8.dp, bottom = 8.dp),
             color = Color.Gray,
             thickness = 1.dp
         )
 
-        // Row kedua
-        Row(
+        // Content
+        LazyColumn(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Kolom 1: Avatar
-            Avatar2()
-
-            // Spacer
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Column {
-                ClickableText(
-                    text = annotatedString,
-                    onClick = {
-                        // Navigate to the "Profile" route when clicked
-                        navController.navigate("Profile")
-                    },
-                    modifier = Modifier.clickable { /* clickable modifier */ }
-                )
-
-                Text(
-                    text = "a minute ago",
-                    fontSize = 14.sp,
-                    color = Color.Gray
-                )
+                .fillMaxSize()
+                .weight(10f),
+            content = {
+                items(postingans) { postingan ->
+                    PostingItem(postingan = postingan, navController = navController)
+                }
             }
-
-            // Spacer
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Kolom 3: Menu 3 titik
-            ThreeDotMenu()
-        }
-
-        // Row ketiga
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-        ) {
-            Text(text = "Tugas hari ini", fontSize = 16.sp)
-        }
-
-        // Row keempat (menggunakan Box untuk Image)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-        ) {
-            Column {
-                Image(
-                    painter = painterResource(id = R.drawable.post1),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(14f / 9f)
-                )
-            }
-        }
-
-        // Row kelima
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            LikeColumn()
-            Spacer(modifier = Modifier.width(90.dp))
-            CommentColumn()
-            Spacer(modifier = Modifier.width(90.dp))
-            ShareColumn()
-        }
-
-        Divider(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 10.dp, bottom = 8.dp),
-            color = Color.Gray,
-            thickness = 3.dp
         )
-
-        // Row keenam
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Kolom 1: Avatar
-            Avatar()
-
-            // Spacer
-            Spacer(modifier = Modifier.width(8.dp))
-
-            // Kolom 2: Nama Pengguna dan Waktu
-            Column {
-                Text(
-                    text = "Mukijo",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "an hour ago",
-                    fontSize = 14.sp,
-                    color = Color.Gray
-                )
-            }
-
-            // Spacer
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Kolom 3: Menu 3 titik
-            ThreeDotMenu()
-        }
-
-        // Row ketujuh
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-//                .padding(vertical = 80.dp)
-        ) {
-            Text(text = "Semangat", fontSize = 16.sp)
-        }
-
-        // Row keempat (menggunakan Box untuk Image)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 120.dp)
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.post2),
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(14f / 9f)
-            )
-        }
-
-        // Row kedelepan
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            LikeColumn()
-            Spacer(modifier = Modifier.width(35.dp))
-            CommentColumn()
-            Spacer(modifier = Modifier.width(35.dp))
-            ShareColumn()
-        }
-
-        Divider(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 10.dp, bottom = 8.dp),
-            color = Color.Gray,
-            thickness = 3.dp
-        )
-
     }
 }
 
 @Composable
-fun icon3l() {
-    val logoModifier = Modifier
-        .size(40.dp)
+fun PostingItem(postingan: Postingan, navController: NavController) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Avatar
+                Avatar()
 
-    Image(
-        painter = painterResource(id = R.drawable.icon3l),
-        contentDescription = null,
-        modifier = logoModifier
-    )
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // User Info (Username and Timestamp)
+                Column {
+                    ClickableText(
+                        text = buildAnnotatedString {
+                            withStyle(style = SpanStyle(
+                                color = LocalContentColor.current,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp
+                            )
+                            ) {
+                                append(postingan.username)
+                            }
+                        },
+                        onClick = {
+                            navController.navigate("Profile/${postingan.username}")
+                        },
+                        modifier = Modifier.clickable { }
+                    )
+
+                    val formattedTimestamp = formatDate(postingan.timestamp)
+                    Text1(
+                        text = "$formattedTimestamp",
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
+                }
+            }
+
+            // Caption
+            Text1(text = "${postingan.caption}")
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            ) {
+                Column {
+                    ImagePost()
+                }
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CommentColumn()
+                Spacer(modifier = Modifier.width(120.dp))
+                LikeColumn()
+            }
+
+        }
+    }
 }
+
 
 @Composable
 fun Avatar() {
+    val randomAvaIndex = remember { mutableStateOf(Random.nextInt(1, 6)) }
+
+    val avatarResourceId = when (randomAvaIndex.value) {
+        1 -> R.drawable.ava1
+        2 -> R.drawable.ava2
+        3 -> R.drawable.ava3
+        4 -> R.drawable.ava4
+        5 -> R.drawable.ava5
+        else -> R.drawable.ava1 // Default jika indeks acak tidak sesuai dengan yang diharapkan
+    }
+
     Image(
-        painter = painterResource(id = R.drawable.ava1),
+        painter = painterResource(id = avatarResourceId),
         contentDescription = null,
         modifier = Modifier
             .size(40.dp)
             .clip(CircleShape)
             .background(MaterialTheme.colorScheme.background)
-    )
-}
-
-@Composable
-fun Avatar2() {
-    Image(
-        painter = painterResource(id = R.drawable.ava2),
-        contentDescription = null,
-        modifier = Modifier
-            .size(40.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.background)
-    )
-}
-
-@Composable
-fun ThreeDotMenu() {
-    Icon(
-        imageVector = Icons.Default.MoreVert,
-        contentDescription = null,
-        tint = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.size(24.dp)
     )
 }
 
@@ -340,7 +252,7 @@ fun LikeColumn() {
     Spacer(modifier = Modifier.width(8.dp))
 
     // Teks "likes"
-    Text(
+    Text1(
         text = "21",
         fontSize = 14.sp,
         fontWeight = FontWeight.Bold,
@@ -360,37 +272,24 @@ fun CommentColumn() {
 
     Spacer(modifier = Modifier.width(8.dp))
 
-    Text(
-        text = "10",
+    Text1(
+        text = "Komentar",
         fontSize = 14.sp,
         fontWeight = FontWeight.Bold,
         color = Color.Gray
     )
 }
 
-@Composable
-fun ShareColumn() {
-
-    Icon(
-        imageVector = Icons.Default.Share,
-        contentDescription = null,
-        tint = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.size(24.dp)
-    )
-
-    Spacer(modifier = Modifier.width(8.dp))
-
-    Text(
-        text = "10",
-        fontSize = 14.sp,
-        fontWeight = FontWeight.Bold,
-        color = Color.Gray
-    )
+fun formatDate(timestamp: Long): String {
+    val date = java.util.Date(timestamp)
+    val format = SimpleDateFormat("dd-MM-yyyy HH:mm")
+    return format.format(date)
 }
 
 @Composable
-fun FloatingMenu(navController: NavController, onClickFab: () -> Unit) {
+fun FloatingMenu(navController: NavController, authViewModel: AuthViewModel, onClickFab: () -> Unit) {
     var isMenuOpen by remember { mutableStateOf(false) }
+    val username by authViewModel.username.observeAsState("")
 
     FloatingActionButton(
         onClick = { isMenuOpen = !isMenuOpen },
@@ -407,16 +306,16 @@ fun FloatingMenu(navController: NavController, onClickFab: () -> Unit) {
                 .fillMaxSize()
                 .clickable { isMenuOpen = false }
                 .padding(16.dp)
-                .zIndex(1f)
+                .zIndex(4f)
         ) {
-            Text(text = "", fontSize = 12.sp)
+            Text1(text = "", fontSize = 12.sp)
             Divider(modifier = Modifier.padding(top = 8.dp, bottom = 8.dp))
 
             menuOptions.forEach { option ->
                 Button(
                     onClick = {
                         isMenuOpen = false
-                        option.onClick.invoke(navController)
+                        option.onClick.invoke(navController, username ?: "")
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -428,13 +327,41 @@ fun FloatingMenu(navController: NavController, onClickFab: () -> Unit) {
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Icon(imageVector = option.icon, contentDescription = null, modifier = Modifier.size(24.dp))
-                        Text(text = option.text)
+                        Text1(text = option.text)
                     }
                 }
             }
         }
     }
 }
+
+@Composable
+fun ImagePost() {
+    val randomImageIndex = remember { mutableStateOf(Random.nextInt(1, 11)) }
+
+    val imagePostResourceId = when (randomImageIndex.value) {
+        1 -> R.drawable.post1
+        2 -> R.drawable.post2
+        3 -> R.drawable.post3
+        4 -> R.drawable.post4
+        5 -> R.drawable.post5
+        6 -> R.drawable.post6
+        7 -> R.drawable.post7
+        8 -> R.drawable.post8
+        9 -> R.drawable.post9
+        10 -> R.drawable.post10
+        else -> R.drawable.post1
+    }
+
+    Image(
+        painter = painterResource(id = imagePostResourceId),
+        contentDescription = null,
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(14f / 9f)
+    )
+}
+
 
 
 

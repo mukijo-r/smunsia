@@ -1,7 +1,6 @@
 package com.example.smunsia1
 
 import android.content.res.Configuration
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,8 +19,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +40,9 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
+import kotlinx.coroutines.delay
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,6 +52,8 @@ fun ScreenRegister(navController: NavHostController) {
     var email by remember { mutableStateOf(TextFieldValue("")) }
     var password1 by remember { mutableStateOf(TextFieldValue("")) }
     var password2 by remember { mutableStateOf(TextFieldValue("")) }
+    var showMessage by remember { mutableStateOf(false) }
+    var message by remember { mutableStateOf("") }
 
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
@@ -178,21 +185,72 @@ fun ScreenRegister(navController: NavHostController) {
                 }
             )
         }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Text(text = "*) password minimal 6 karakter", fontSize = 12.sp, modifier = Modifier.padding(end = 8.dp))
+        }
 
         Spacer(modifier = Modifier.height(25.dp))
         Button(onClick = {
-            navController.navigate("Login")
+            // Validasi data pengguna sebelum menyimpan ke database
+            if (username.text.isNotEmpty() && email.text.isNotEmpty() && password1.text.isNotEmpty() && password1.text == password2.text) {
+                // Menggunakan Firebase Authentication untuk registrasi
+                FirebaseAuth.getInstance().createUserWithEmailAndPassword(
+                    email.text.toString(),
+                    password1.text.toString()
+                ).addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        // Registrasi berhasil
+                        val userUid = FirebaseAuth.getInstance().currentUser?.uid
+                        saveUserDataToDatabase(userUid, User(username = username.text, email = email.text))
+                        showMessage = true
+                        message = "Registrasi berhasil"
+
+                        // Mengosongkan nilai TextField setelah registrasi berhasil
+                        username = TextFieldValue("")
+                        email = TextFieldValue("")
+                        password1 = TextFieldValue("")
+                        password2 = TextFieldValue("")
+                    } else {
+                        // Registrasi gagal, tampilkan pesan kesalahan
+                        showMessage = true
+                        message = "Registrasi gagal: ${task.exception?.message}"
+                    }
+                }
+            } else {
+                // Tampilkan pesan kesalahan jika data tidak lengkap
+                showMessage = true
+                message = "Harap isi semua kolom dengan benar"
+            }
         }) {
             Text(text = "Register", fontSize = 20.sp)
         }
 
+
+        if (showMessage) {
+            LaunchedEffect(showMessage) {
+                delay(3000L)
+                showMessage = false
+            }
+
+            Snackbar(
+                modifier = Modifier.padding(8.dp),
+                action = {
+                    TextButton(onClick = { showMessage = false }) {
+                        Text("")
+                    }
+                }
+            ) {
+                Text(message)
+            }
+        }
+
+
         Spacer(modifier = Modifier.height(25.dp))
         Row(
-            modifier = Modifier
-                .padding(vertical = 8.dp)
-                .clickable {
-                    navController.navigate("Login")
-                }
+
         ) {
             val annotatedString = buildAnnotatedString {
                 append("Sudah memiliki akun? ")
@@ -209,6 +267,33 @@ fun ScreenRegister(navController: NavHostController) {
                 modifier = Modifier.padding(vertical = 8.dp)
             )
         }
+
+        Spacer(modifier = Modifier.height(15.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Text(text = "Powered by", fontSize = 20.sp, modifier = Modifier.padding(end = 8.dp))
+            Logo2()
+        }
+    }
+}
+
+data class User(
+    val username: String = "",
+    val email: String = "",
+    val password: String = ""
+)
+
+private fun saveUserDataToDatabase(userUid: String?, user: User) {
+    if (userUid != null) {
+        val databaseReference = FirebaseDatabase.getInstance().getReference("users")
+        databaseReference.child(userUid).setValue(
+            mapOf(
+                "username" to user.username,
+                "email" to user.email
+            )
+        )
     }
 }
 

@@ -44,13 +44,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
+import androidx.navigation.NavController
+import com.example.smunsia1.ui.AuthViewModel
+import kotlin.random.Random
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
-fun ScreenEditProfile(navController: NavHostController) {
+fun ScreenEditProfile(navController: NavController, authViewModel: AuthViewModel, username: String) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -93,7 +94,14 @@ fun ScreenEditProfile(navController: NavHostController) {
                 items(
                     items = listOf(
                         Profile(
-                            imageId = R.drawable.ava3,
+                            imageId = when (Random.nextInt(1, 6)) {
+                                1 -> R.drawable.ava1
+                                2 -> R.drawable.ava2
+                                3 -> R.drawable.ava3
+                                4 -> R.drawable.ava4
+                                5 -> R.drawable.ava5
+                                else -> R.drawable.ava1
+                            },
                         ),
                     )
                 ) { profile ->
@@ -101,18 +109,16 @@ fun ScreenEditProfile(navController: NavHostController) {
                 }
             }
         )
+
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfile(profile: Profile) {
-    var name by remember { mutableStateOf("Mukijo") }
-    var username by remember { mutableStateOf("Mukijo") }
-    var email by remember { mutableStateOf("mukijo@gmail.com") }
-    var password by remember { mutableStateOf("********") }
-    var city by remember { mutableStateOf("Surabaya") }
-    var phoneNumber by remember { mutableStateOf("123-456-7890") }
+    var username by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
 
     val painter: Painter = painterResource(id = profile.imageId)
 
@@ -151,16 +157,6 @@ fun EditProfile(profile: Profile) {
             )
         }
 
-        Spacer(modifier = Modifier.size(16.dp))
-
-        TextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text("Your name", color = Color.LightGray) },
-            colors = TextFieldDefaults.textFieldColors(containerColor = Color.White),
-            modifier = Modifier.fillMaxWidth()
-        )
-
         Spacer(modifier = Modifier.size(8.dp))
 
         TextField(
@@ -193,38 +189,12 @@ fun EditProfile(profile: Profile) {
 
         Spacer(modifier = Modifier.size(8.dp))
 
-        TextField(
-            value = city,
-            onValueChange = { city = it },
-            label = { Text("Your city", color = Color.LightGray) },
-            colors = TextFieldDefaults.textFieldColors(containerColor = Color.White),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.size(8.dp))
-
-        TextField(
-            value = phoneNumber,
-            onValueChange = { phoneNumber = it },
-            label = { Text("Your phone number", color = Color.LightGray) },
-            colors = TextFieldDefaults.textFieldColors(containerColor = Color.White),
-            modifier = Modifier.fillMaxWidth()
-        )
     }
 }
-
-@Composable
-fun PasswordVisualTransformation(): VisualTransformation = VisualTransformation.None
-
-
-@Composable
-fun EditProfileExample() {
-    val profile = Profile(imageId = R.drawable.ava5)
-    EditProfile(profile = profile)
-}
-
-
 
 data class Profile(
     @DrawableRes val imageId: Int,
 )
+
+
+

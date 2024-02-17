@@ -12,6 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Smunsia1"
         tools:targetApi="31">
+
         <activity
             android:name=".Personalize"
             android:exported="false"
@@ -29,5 +30,7 @@
             </intent-filter>
         </activity>
     </application>
+    <uses-permission android:name="android.permission.INTERNET" />
+
 
 </manifest>

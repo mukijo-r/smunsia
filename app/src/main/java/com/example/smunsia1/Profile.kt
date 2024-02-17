@@ -2,23 +2,20 @@ package com.example.smunsia1
 
 import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.ArrowBack
@@ -38,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -47,18 +45,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.smunsia1.ui.PostinganViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ScreenProfile(navController: NavHostController) {
+fun ScreenProfile(navController: NavHostController, username: String, postinganViewModel: PostinganViewModel = viewModel()) {
     val annotatedString = buildAnnotatedString {
         withStyle(style = SpanStyle(
             color = LocalContentColor.current,
@@ -66,10 +65,11 @@ fun ScreenProfile(navController: NavHostController) {
             fontSize = 18.sp
         )
         ) {
-            append("Irmayanti Juliana")
+            append(username)
         }
     }
 
+    val postingans by postinganViewModel.postingans.observeAsState(emptyList())
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     Column(modifier = Modifier.fillMaxSize(),
@@ -98,15 +98,9 @@ fun ScreenProfile(navController: NavHostController) {
                 .background(MaterialTheme.colorScheme.primary)
         ) {
             // Use painterResource for image from res/drawable
-            Image(
-                painter = painterResource(id = R.drawable.ava2),
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(CircleShape)
-            )
+            Avatar()
         }
-        Text(text =  "Irmayanti Juliana", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text(text =  "$username", fontSize = 20.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(25.dp))
 
         Row(
@@ -115,9 +109,9 @@ fun ScreenProfile(navController: NavHostController) {
                 .padding(top = 8.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            UserStat(icon = Icons.Default.Create, count = 150, label = "Posts")
-            UserStat(icon = Icons.Default.Person, count = 1000, label = "Followers")
-            UserStat(icon = Icons.Default.Person, count = 500, label = "Following")
+            UserStat(icon = Icons.Default.Create, count = 1, label = "Posts")
+            UserStat(icon = Icons.Default.Person, count = 0, label = "Followers")
+            UserStat(icon = Icons.Default.Person, count = 0, label = "Following")
         }
 
         Row(
@@ -156,88 +150,15 @@ fun ScreenProfile(navController: NavHostController) {
                 color = Color.Gray,
                 thickness = 1.dp
             )
+            val filteredPostingans = postingans.filter { it.username == username }
 
-            // Row kedua
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Kolom 1: Avatar
-                Avatar2()
-
-                // Spacer
-                Spacer(modifier = Modifier.width(8.dp))
-
-                // Kolom 2: Nama Pengguna dan Waktu
-                Column {
-                    // Teks yang dapat diklik
-                    ClickableText(
-                        text = annotatedString,
-                        onClick = {
-                            // Navigate to the "Profile" route when clicked
-                            navController.navigate("Profile")
-                        },
-                        modifier = Modifier.clickable { /* clickable modifier */ }
-                    )
-
-                    Text(
-                        text = "a minute ago",
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                content = {
+                    items(filteredPostingans) { postingan ->
+                        PostingItem(postingan = postingan, navController = navController)
+                    }
                 }
-
-                // Spacer
-                Spacer(modifier = Modifier.weight(1f))
-
-                // Kolom 3: Menu 3 titik
-                ThreeDotMenu()
-            }
-
-            // Row ketiga
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-            ) {
-                Text(text = "Tugas hari ini", fontSize = 16.sp)
-            }
-
-            // Row keempat (menggunakan Box untuk Image)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.post1),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(14f / 9f)
-                )
-            }
-
-            // Row kelima
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                LikeColumn()
-                Spacer(modifier = Modifier.width(100.dp))
-                CommentColumn()
-            }
-
-            Divider(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 10.dp, bottom = 8.dp),
-                color = Color.Gray,
-                thickness = 3.dp
             )
 
         }
@@ -289,3 +210,9 @@ fun FollowButton() {
         }
     }
 }
+
+
+
+
+
+
