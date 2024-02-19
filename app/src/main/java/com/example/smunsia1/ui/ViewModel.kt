@@ -4,8 +4,7 @@ import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.smunsia1.Group
+
 import com.example.smunsia1.Postingan
 import com.example.smunsia1.PostinganRepository
 import com.example.smunsia1.UserRepository
@@ -14,12 +13,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
+
 
 class AuthViewModel : ViewModel() {
     private val _username = MutableLiveData<String>()
@@ -48,6 +42,7 @@ class PostinganViewModel : ViewModel() {
 }
 
 class GroupListViewModel : ViewModel() {
+
     private val _groups = MutableLiveData<List<Group>>()
     val groups: LiveData<List<Group>> get() = _groups
 
@@ -60,50 +55,35 @@ class GroupListViewModel : ViewModel() {
 
     // Fungsi ini akan dipanggil untuk mengambil daftar grup dari Firebase Realtime Database
     fun fetchGroups() {
-        viewModelScope.launch {
-            try {
-                // Menggunakan withContext(Dispatchers.IO) untuk menjalankan operasi di thread IO
-                val fetchedGroups = withContext(Dispatchers.IO) {
-                    fetchGroupsFromFirebase()
+        val groupsList = mutableListOf<Group>()
+
+        database.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                for (groupSnapshot in snapshot.children) {
+                    val groupId = groupSnapshot.key ?: ""
+                    val groupName = groupSnapshot.child("groupName").getValue(String::class.java) ?: ""
+                    val description = groupSnapshot.child("description").getValue(String::class.java) ?: ""
+
+                    val group = Group(groupId, groupName, description)
+                    groupsList.add(group)
                 }
 
-                _groups.value = fetchedGroups
-            } catch (e: Exception) {
+                _groups.value = groupsList
+            }
+
+            override fun onCancelled(error: DatabaseError) {
                 // Handle error, misalnya log atau tampilkan pesan ke pengguna
-                e.printStackTrace()
+                error.toException().printStackTrace()
             }
-        }
-    }
-
-    // Fungsi untuk mendapatkan daftar grup dari Firebase Realtime Database
-    private suspend fun fetchGroupsFromFirebase(): List<Group> {
-        return withContext(Dispatchers.IO) {
-            return@withContext suspendCoroutine<List<Group>> { continuation ->
-                database.addListenerForSingleValueEvent(object : ValueEventListener {
-                    override fun onDataChange(snapshot: DataSnapshot) {
-                        val groups = mutableListOf<Group>()
-
-                        for (groupSnapshot in snapshot.children) {
-                            val groupId = groupSnapshot.key ?: ""
-                            val groupName = groupSnapshot.child("groupName").getValue(String::class.java) ?: ""
-                            val description = groupSnapshot.child("description").getValue(String::class.java) ?: ""
-
-                            val group = Group(groupId, groupName, description)
-                            groups.add(group)
-                        }
-
-                        continuation.resume(groups)
-                    }
-
-                    override fun onCancelled(error: DatabaseError) {
-                        continuation.resumeWithException(error.toException())
-                    }
-                })
-            }
-        }
+        })
     }
 }
 
+data class Group(
+    val groupId: String,
+    val groupName: String,
+    val description: String
+)
 
 class UserViewModel : ViewModel() {
     private val repository = UserRepository()

@@ -72,6 +72,7 @@ val postinganRef = database.getReference("postingan")
 val menuOptions = listOf(
     MenuOption("New Post", Icons.Filled.Add) { navController, username -> navController.navigate("NewPost/$username") },
     MenuOption("New Group", Icons.Filled.Person) { navController, username -> navController.navigate("NewGroup/$username") },
+    MenuOption("Group", Icons.Filled.Person) { navController, username -> navController.navigate("GroupList/$username") },
     MenuOption("Profil", Icons.Filled.Settings) { navController, username -> navController.navigate("EditProfile/$username") },
     MenuOption("Logout", Icons.Filled.Home) { navController, username -> navController.navigate("Login") },
 )

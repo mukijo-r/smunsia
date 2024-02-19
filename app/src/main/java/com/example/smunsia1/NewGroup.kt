@@ -134,7 +134,7 @@ fun ScreenGroup(navController: NavController, authViewModel: AuthViewModel, user
             Button(
                 onClick = {
                     firebaseRepository.createGroup(nameText, descriptionText, selectedUsernames)
-                    navController.navigate("Posting")
+                    navController.navigate("GroupList")
                 },
                 modifier = Modifier
                     .fillMaxWidth()

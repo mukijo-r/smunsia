@@ -56,6 +56,13 @@ fun Nav(){
             ScreenGroup(navController, authViewModel, username)
         }
 
+        composable(route = "GroupList/{username}") { backStackEntry ->
+            val usernameState = authViewModel.username.observeAsState(initial = "")
+            val username = usernameState.value
+
+            GroupList(navController, authViewModel, username)
+        }
+
         composable(route = "EditProfile/{username}") { backStackEntry ->
             val usernameState = authViewModel.username.observeAsState(initial = "")
             val username = usernameState.value
