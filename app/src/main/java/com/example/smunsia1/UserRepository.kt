@@ -32,7 +32,7 @@ class UserRepository {
             }
 
             override fun onCancelled(error: DatabaseError) {
-                // Handle the error here if needed
+
             }
         })
     }

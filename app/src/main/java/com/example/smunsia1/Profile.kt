@@ -110,7 +110,7 @@ fun ScreenProfile(navController: NavHostController, username: String, postinganV
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             UserStat(icon = Icons.Default.Create, count = 1, label = "Posts")
-            UserStat(icon = Icons.Default.Person, count = 0, label = "Followers")
+            UserStat(icon = Icons.Default.Person, count = 1, label = "Followers")
             UserStat(icon = Icons.Default.Person, count = 0, label = "Following")
         }
 
@@ -209,6 +209,16 @@ fun FollowButton() {
             Text(text = "Mengikuti")
         }
     }
+}
+
+@Composable
+fun Centang() {
+    Icon(
+        imageVector = Icons.Default.Check,
+        contentDescription = null,
+        tint = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+        modifier = Modifier.size(24.dp)
+    )
 }
 
 

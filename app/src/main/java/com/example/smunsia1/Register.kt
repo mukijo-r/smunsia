@@ -208,7 +208,6 @@ fun ScreenRegister(navController: NavHostController) {
                         showMessage = true
                         message = "Registrasi berhasil"
 
-                        // Mengosongkan nilai TextField setelah registrasi berhasil
                         username = TextFieldValue("")
                         email = TextFieldValue("")
                         password1 = TextFieldValue("")

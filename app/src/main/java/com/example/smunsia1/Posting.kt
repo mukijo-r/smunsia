@@ -227,7 +227,7 @@ fun Avatar() {
         3 -> R.drawable.ava3
         4 -> R.drawable.ava4
         5 -> R.drawable.ava5
-        else -> R.drawable.ava1 // Default jika indeks acak tidak sesuai dengan yang diharapkan
+        else -> R.drawable.ava1
     }
 
     Image(

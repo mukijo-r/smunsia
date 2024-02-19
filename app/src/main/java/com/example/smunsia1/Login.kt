@@ -59,7 +59,6 @@ fun ScreenLogin(navController: NavHostController, authViewModel: AuthViewModel) 
     var showMessage by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf("") }
 
-    // Check if the screen is in landscape mode
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     Column(
@@ -68,13 +67,12 @@ fun ScreenLogin(navController: NavHostController, authViewModel: AuthViewModel) 
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (isLandscape) {
-            // Additional layout for landscape mode
             Row(
                 modifier = Modifier.fillMaxSize(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Your content for landscape mode
+                // content for landscape mode
                 Logo1()
                 Column(
                     verticalArrangement = Arrangement.Center,
@@ -82,7 +80,6 @@ fun ScreenLogin(navController: NavHostController, authViewModel: AuthViewModel) 
                 ) {
                     HeaderText(text = "Login")
                     Spacer(modifier = Modifier.height(16.dp))
-                    // Adjusted layout for landscape mode
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
@@ -119,7 +116,7 @@ fun ScreenLogin(navController: NavHostController, authViewModel: AuthViewModel) 
                 }
             }
         } else {
-            // Your existing content for portrait mode
+            // content for portrait mode
             Logo1()
             Spacer(modifier = Modifier.height(8.dp))
             HeaderText(text = "Login")
@@ -169,21 +166,16 @@ fun ScreenLogin(navController: NavHostController, authViewModel: AuthViewModel) 
                                 databaseReference.child(userUid).addListenerForSingleValueEvent(object :
                                     ValueEventListener {
                                     override fun onDataChange(dataSnapshot: DataSnapshot) {
-                                        // Ambil data username dari snapshot
                                         val username = dataSnapshot.child("username").getValue(String::class.java)
-                                        // Gunakan data username sesuai kebutuhan
-
-                                        // Set username ke ViewModel atau tempat penyimpanan data yang sesuai
                                         authViewModel.setLoggedInUser(username ?: "")
                                     }
 
                                     override fun onCancelled(databaseError: DatabaseError) {
-                                        // Handle pembatalan
+
                                     }
                                 })
                             }
-
-                            // Lanjutkan navigasi atau tindakan berikutnya setelah autentikasi sukses
+                            // Lanjutkan navigasi
                             navController.navigate("Posting")
                         } else {
                             // Jika otentikasi gagal, tampilkan pesan kesalahan
@@ -203,16 +195,15 @@ fun ScreenLogin(navController: NavHostController, authViewModel: AuthViewModel) 
 
         if (showMessage) {
             LaunchedEffect(showMessage) {
-                delay(2000L) // Menunda selama 2 detik
+                delay(2000L)
                 showMessage = false
             }
 
             Snackbar(
                 modifier = Modifier.padding(8.dp),
                 action = {
-                    // Tombol untuk menutup Snackbar (opsional)
                     TextButton(onClick = { showMessage = false }) {
-                        Text("Tutup")
+                        Text("")
                     }
                 }
             ) {

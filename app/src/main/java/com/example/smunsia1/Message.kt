@@ -68,7 +68,6 @@ fun ScreenMessage(navController: NavHostController) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        // Now, integrate DirectMessageScreen
         DirectMessageScreen(navController = navController, messages = getDummyMessages())
     }
 }
@@ -99,7 +98,6 @@ fun DirectMessageScreen(navController: NavHostController, messages: List<Message
                     .fillMaxSize()
                     .padding(16.dp)
             ) {
-                // List of Direct Messages
                 LazyColumn(
                     modifier = Modifier
                         .weight(1f),
@@ -110,10 +108,9 @@ fun DirectMessageScreen(navController: NavHostController, messages: List<Message
                     }
                 }
 
-                // Compose Message Section
                 ComposeMessageSection(
                     onMessageSent = { newMessage ->
-                        // Handle sending the new message
+
                     }
                 )
             }
@@ -124,9 +121,7 @@ fun DirectMessageScreen(navController: NavHostController, messages: List<Message
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ComposeMessageSection(onMessageSent: (String) -> Unit) {
-    // LocalFocusManager is used to manage focus within the Compose hierarchy
     val focusManager = LocalFocusManager.current
-    // LocalSoftwareKeyboardController is used to control the software keyboard
     val keyboardController = LocalSoftwareKeyboardController.current
 
     // Input text state
@@ -136,7 +131,7 @@ fun ComposeMessageSection(onMessageSent: (String) -> Unit) {
     val onSendClick: () -> Unit = {
         if (messageText.isNotEmpty()) {
             onMessageSent(messageText)
-            messageText = "" // Clear the input field after sending
+            messageText = ""
             focusManager.clearFocus()
         }
     }

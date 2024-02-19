@@ -30,14 +30,13 @@ class PostinganRepository {
                     }
                 }
 
-                // Sort the list based on timestamp in descending order
                 val sortedPostingans = postingansList.sortedByDescending { it.timestamp }
 
                 _postingans.value = sortedPostingans
             }
 
             override fun onCancelled(error: DatabaseError) {
-                // Handle the error here if needed
+
             }
         })
     }
@@ -60,12 +59,11 @@ class PostinganRepository {
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    // Handle the error here if needed
+
                 }
             })
 
         return postingansLiveData
     }
-
 
 }

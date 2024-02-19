@@ -53,7 +53,6 @@ fun PostPage(navController: NavController, authViewModel: AuthViewModel, usernam
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
     val pickImageLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri? ->
-        // Handle the selected image URI
         selectedImageUri = uri
     }
 
@@ -87,8 +86,8 @@ fun PostPage(navController: NavController, authViewModel: AuthViewModel, usernam
                         username = username,
                         onDescriptionChanged = { descriptionText = it },
                         onImageClick = { pickImageLauncher.launch("image/*") },
-                        selectedImageUri = selectedImageUri, // Kirim selectedImageUri ke PostItem
-                        onImageSelected = { uri -> selectedImageUri = uri }, // Update selectedImageUri dari PostItem
+                        selectedImageUri = selectedImageUri,
+                        onImageSelected = { uri -> selectedImageUri = uri },
                         navController = navController
                     )
                     selectedImageUri?.let { uri ->
@@ -111,8 +110,8 @@ fun PostItem(
     username: String,
     onDescriptionChanged: (String) -> Unit,
     onImageClick: () -> Unit,
-    selectedImageUri: Uri?, // Terima selectedImageUri dari PostPage
-    onImageSelected: (Uri?) -> Unit, // Update selectedImageUri di PostPage
+    selectedImageUri: Uri?,
+    onImageSelected: (Uri?) -> Unit,
     navController: NavController
 ) {
     val painter: Painter = painterResource(id = post.imageId)
@@ -157,8 +156,7 @@ fun PostItem(
 
             Button(
                 onClick = {
-                    // Handle "Bagikan" button click
-                    onImageSelected(selectedImageUri) // Kirim selectedImageUri ke PostPage
+                    onImageSelected(selectedImageUri)
                     selectedImageUri?.let { uri ->
                         // Upload gambar ke Firebase Storage
                         val imageUrl = uploadGambarKeFirebaseStorage(uri)
@@ -176,7 +174,6 @@ fun PostItem(
         }
     }
 }
-
 
 data class Post(
     @DrawableRes val imageId: Int,
@@ -200,34 +197,25 @@ fun simpanDataKeDatabase(username: String, caption: String, imageUrl: String, na
 
 }
 
-
-
 fun uploadGambarKeFirebaseStorage(uri: Uri): String {
     val storage = Firebase.storage
     val storageRef = storage.reference
 
-    // Buat referensi untuk gambar di Firebase Storage
     val imageRef = storageRef.child("images/${UUID.randomUUID()}.jpg")
 
     // Upload file ke Firebase Storage
     imageRef.putFile(uri)
         .addOnSuccessListener {
-            // Handle pengungahan sukses
-            // Dapatkan URL gambar
             imageRef.downloadUrl
                 .addOnSuccessListener { downloadUri ->
-                    // Gunakan URL gambar (misalnya, simpan di database)
                     val imageUrl = downloadUri.toString()
-                    // Tambahkan logika atau penanganan sesuai kebutuhan Anda
                 }
                 .addOnFailureListener {
-                    // Tangani jika gagal mendapatkan URL gambar
                 }
         }
         .addOnFailureListener {
-            // Tangani jika pengungahan gagal
         }
 
-    return "" // Sesuaikan dengan kebutuhan Anda
+    return ""
 }
 

@@ -1,18 +1,25 @@
 package com.example.smunsia1.ui
 
 import android.net.Uri
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.smunsia1.Group
 import com.example.smunsia1.Postingan
 import com.example.smunsia1.PostinganRepository
+import com.example.smunsia1.UserRepository
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import com.google.firebase.firestore.auth.User
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 class AuthViewModel : ViewModel() {
     private val _username = MutableLiveData<String>()
@@ -40,36 +47,67 @@ class PostinganViewModel : ViewModel() {
     }
 }
 
-class UserViewModel : ViewModel() {
+class GroupListViewModel : ViewModel() {
+    private val _groups = MutableLiveData<List<Group>>()
+    val groups: LiveData<List<Group>> get() = _groups
 
-    private val databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("users")
-    val usersData = mutableStateOf<List<User>>(emptyList())
+    private val database: DatabaseReference = FirebaseDatabase.getInstance().reference.child("groups")
 
     init {
-        fetchUsersData()
+        // Panggil fungsi ini untuk mengambil daftar grup saat ViewModel diinisialisasi
+        fetchGroups()
     }
 
-    private fun fetchUsersData() {
-        databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                val users = mutableListOf<User>()
-
-                for (userSnapshot in dataSnapshot.children) {
-                    val username = userSnapshot.child("username").getValue(String::class.java)
-                    val email = userSnapshot.child("email").getValue(String::class.java)
-                    val password = userSnapshot.child("password").getValue(String::class.java)
-
-                    val user = User(username)
-                    users.add(user)
+    // Fungsi ini akan dipanggil untuk mengambil daftar grup dari Firebase Realtime Database
+    fun fetchGroups() {
+        viewModelScope.launch {
+            try {
+                // Menggunakan withContext(Dispatchers.IO) untuk menjalankan operasi di thread IO
+                val fetchedGroups = withContext(Dispatchers.IO) {
+                    fetchGroupsFromFirebase()
                 }
 
-                usersData.value = users
+                _groups.value = fetchedGroups
+            } catch (e: Exception) {
+                // Handle error, misalnya log atau tampilkan pesan ke pengguna
+                e.printStackTrace()
             }
-
-            override fun onCancelled(databaseError: DatabaseError) {
-                // Handle kesalahan jika terjadi
-            }
-        })
+        }
     }
+
+    // Fungsi untuk mendapatkan daftar grup dari Firebase Realtime Database
+    private suspend fun fetchGroupsFromFirebase(): List<Group> {
+        return withContext(Dispatchers.IO) {
+            return@withContext suspendCoroutine<List<Group>> { continuation ->
+                database.addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        val groups = mutableListOf<Group>()
+
+                        for (groupSnapshot in snapshot.children) {
+                            val groupId = groupSnapshot.key ?: ""
+                            val groupName = groupSnapshot.child("groupName").getValue(String::class.java) ?: ""
+                            val description = groupSnapshot.child("description").getValue(String::class.java) ?: ""
+
+                            val group = Group(groupId, groupName, description)
+                            groups.add(group)
+                        }
+
+                        continuation.resume(groups)
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                        continuation.resumeWithException(error.toException())
+                    }
+                })
+            }
+        }
+    }
+}
+
+
+class UserViewModel : ViewModel() {
+    private val repository = UserRepository()
+    val users = repository.users
+
 }
 
