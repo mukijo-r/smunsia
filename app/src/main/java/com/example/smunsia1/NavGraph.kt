@@ -7,12 +7,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.smunsia1.ui.AuthViewModel
+import com.example.smunsia1.ui.EditProfileViewModel
 import com.example.smunsia1.ui.PostinganViewModel
 
 @Composable
 fun Nav(){
     val navController = rememberNavController()
     val authViewModel: AuthViewModel = viewModel()
+    val editProfileViewModel : EditProfileViewModel = viewModel()
     val postinganViewModel: PostinganViewModel = PostinganViewModel()
     NavHost(navController = navController, startDestination = "Login"){
 
@@ -64,10 +66,10 @@ fun Nav(){
         }
 
         composable(route = "EditProfile/{username}") { backStackEntry ->
-            val usernameState = authViewModel.username.observeAsState(initial = "")
-            val username = usernameState.value
+            val usernameState = editProfileViewModel.users.observeAsState(initial = "")
+            val username = backStackEntry.arguments?.getString("username") ?: ""
 
-            ScreenEditProfile(navController, authViewModel, username)
+            ScreenEditProfile(navController, editProfileViewModel, username)
         }
 
     }
